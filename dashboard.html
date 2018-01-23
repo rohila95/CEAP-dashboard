@@ -1,0 +1,625 @@
+
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+<title>Forecasting Project</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet"
+	href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script
+	src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script
+	src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+<script
+	src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+<script src="mycharts.js"></script>
+<script src="dashboard.js"></script>
+
+<script>
+	var ceapValue=0;
+	function headerChange(x) {
+		$("#chartHolder").empty();
+		$("#chartTEUSFirst").empty();
+		$("#chartTEUSSecond").empty();
+		$("#chartTEUSLegend").empty();
+		$("#hotelRevCharts").empty();
+		if (x == 1) {
+			loadPieYearDropdownOptions();
+			$("#hotelCharts").show();
+			$("#portCharts").hide();
+			var region = $("#hotelRegionPicker option:selected").val();
+			var gtype = $("input[name=optradio]:checked").val();
+			drawHotelCharts(region, gtype);
+			hotelRegionChange();
+			$("#hotelPieCharts").hide();
+			$("#hotelPieChartHeader").hide();
+			$("#hotelChartHeader").show();
+			$("#hotelRevCharts").show();
+			$("#ceapDashboard").hide();
+		} else if (x == 2) {
+			$("#hotelCharts").hide();
+			$("#portCharts").show();
+			$("#portDataHeader").show();
+			portofVAChart(1)
+			inboundTEU('2006');
+			$("#ceapDashboard").hide();
+		} else if(x==3){
+			$("#ceapDashboard").show();
+			$("#hotelCharts").hide();
+			$("#portDataHeader").hide();
+		}
+	}
+
+	function changePieChart() {
+		var year = $("#teusYear option:selected").text();
+		$("#chartTEUSFirst").empty();
+		$("#chartTEUSSecond").empty();
+		$("#chartTEUSLegend").empty();
+		inboundTEU(year);
+	}
+
+	function changeHotelPieChart(x, place) {
+		headerChange(1);
+		if (parseInt(x)==0) {
+			place = $("#pieHeading").text().trim();
+			if (place == "Hampton Roads") {
+				x = 1;
+			} else if (place == "Commonwealth of Virginia") {
+				x = 2;
+			} else if (place == "Washington DC") {
+				x = 3;
+			} else if (place == "Washington DC Room Share") {
+				x = 4;
+			}			
+		}
+		
+		if(parseInt(x)==4)
+		{
+			$("#hotelPieChartTitle").text("Estimated Market Shares of Hotel Industry as measured by Available Rooms");
+		}
+	else
+		{
+			$("#hotelPieChartTitle").text("Estimated Market Shares of Hotel Industry as measured by Hotel Revenue");
+		}
+		$("#hotelPieCharts").show();
+		$("#hotelPieChartHeader").show();
+		$("#hotelChartHeader").hide();
+		$("#hotelRevCharts").hide();
+		var year = $("#hotelPieYear option:selected").text();
+		var region = x;
+		$("#pieHeading").text(place);
+		$("#chartHotelPieFirst").empty();
+		$("#chartHotelPieSecond").empty();
+		$("#chartHotelPieLegend").empty();
+		drawHotelPieChart(year, region);
+	}
+
+	function portofVAChart(x) {
+		$("#chartHolder").empty();
+		if (x == 1) {
+			$("#primaryTitle")
+					.text(
+							"Outbound Loaded TEUs at the Port of Virginia (In Millions)");
+		} else if (x == 2) {
+			$("#primaryTitle")
+					.text(
+							"Inbound Loaded TEUs at the Port of Virginia (In Millions)");
+		} else if (x == 3) {
+			$("#primaryTitle")
+					.text("Total Loaded TEUs at the Port of Virginia");
+		} else if (x == 4) {
+			$("#primaryTitle").text("Empty TEUs at the Port of Virginia");
+		} else if (x == 5) {
+			$("#primaryTitle").text("Total TEUs at the Port of Virginia");
+		} else if (x == 6) {
+			$("#primaryTitle").text(
+					"Total Container Units at the Port of Virginia");
+		} else if (x == 7) {
+			$("#primaryTitle").text(
+					"Container Cargo Tonnage at the Port of Virginia");
+		} else if (x == 8) {
+			$("#primaryTitle")
+					.text("BreakBulk Tonnage at the Port of Virginia");
+		} else if (x == 9) {
+			$("#primaryTitle").text(
+					"Total General Cargo Tonnage at the Port of Virginia");
+		} else if (x == 10) {
+			$("#primaryTitle").text("Total Ship Calls at the Port of Virginia");
+		}
+		drawBarChartPOV(x);
+		$("#chartHolder")
+				.append(
+						"<p>Source: Virginia Port Authority and The Center for Economic Analysis and Policy.</p>");
+	}
+
+	function hotelRegionChange() {
+		$("#hotelCharts").show();
+		$("#portCharts").hide();
+		var region = $("#hotelRegionPicker option:selected").val();
+		var gtype = $("input[name=optradio]:checked").val();
+		drawHotelCharts(region, gtype);
+	}
+
+	function loadPieYearDropdownOptions() {
+		var year = 1991;
+		for (i = year; i < new Date().getFullYear() - 1; i++) {
+			$('#hotelPieYear').append(new Option(i, i));
+		}
+	}
+	
+	function ceapRegionChange()
+	{
+		ceapCaller(ceapValue);
+	}
+	
+	function ceapCaller(x)
+	{
+		console.log(x);
+		for (var i=1;i<=9;i=i+1)
+			{
+			if(parseInt(i)==parseInt(x))
+				{
+				console.log(i);
+					$('#ceapMenu'+i).addClass("cmenuActive");
+				}
+			else
+				{
+				$('#ceapMenu'+i).removeClass("cmenuActive");
+				}
+			
+			}
+		
+		ceapValue=x;
+		$("#ceapChart2").empty();
+		$("#ceapChart3").empty();
+		$("#ceapChart4").empty();
+		if(x==1)
+			{
+				
+					showRGDPGraph($("#ceapDropdown").val());
+					
+			}
+		else if(x==3)
+			{
+				$("#ceapChart").empty();
+				showTNFM($("#ceapDropdown").val());
+			}
+		else if(x==2)
+			{
+				$("#ceapChart").empty();
+				showUnemploymentRate($("#ceapDropdown").val());
+			}
+		else if(x==4)
+		{
+			$("#ceapChart").empty();
+			$("#ceapChart2").empty();
+			showLabourForce($("#ceapDropdown").val());
+			
+		}
+		else if(x==5)
+			{
+			$("#ceapChart").empty();
+			showWeeklyWages($("#ceapDropdown").val());
+			}
+		else if(x==6)
+			{
+			$("#ceapChart").empty();
+			showUiClaims($("#ceapDropdown").val());
+			}
+		else if(x==7)
+			{
+			$("#ceapChart").empty();
+			showTaxRetailSales($("#ceapDropdown").val());
+			}
+		else if(x==8)
+			{
+			$("#ceapChart").empty();
+			showFHFA($("#ceapDropdown").val());
+			}
+		else if(x==9)
+		{
+			$("#ceapChart").empty();
+			if($("#ceapDropdown").val()=="Winchester")
+			{
+				alert("No REVPAR Graph for this region");
+			}
+		else
+			{
+			showRevparGraph($("#ceapDropdown").val());
+			}
+		}
+		
+		else
+			{
+			$("#ceapChart").empty();
+			}
+		
+	}
+</script>
+</head>
+<style>
+.cmenuActive
+{
+	background: white;
+	color: grey;
+}
+.cmenuActive
+{
+	background: white;
+	color: black;
+}
+body {
+	font: 10px sans-serif;
+}
+
+.tick {
+	font-weight: bold;
+}
+
+.line {
+	fill: none;
+	stroke: #48a6a8;
+	stroke-width: 1.5px;
+}
+
+.axis {
+	font: 12px sans-serif;
+}
+
+.axis path, .axis line {
+	fill: none;
+	 stroke: grey;
+    stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
+.bar {
+	fill: steelblue;
+	width: 15px;
+}
+
+.bar:hover {
+	fill: orangered;
+}
+
+.x.axis path {
+	display: block;
+}
+
+.d3-tip {
+	line-height: 1;
+	font-weight: bold;
+	padding: 12px;
+	background: blue;
+	color: #fff;
+	border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+	box-sizing: border-box;
+	display: inline;
+	font-size: 10px;
+	width: 100%;
+	line-height: 1;
+	color: rgba(0, 0, 0, 0.8);
+	content: "\25BC";
+	position: absolute;
+	text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+	margin: -1px 0 0 0;
+	top: 100%;
+	left: 0;
+}
+
+.arc text {
+	font-size: 12px;
+	font-weight: bold;
+	font-family: Arial;
+}
+
+.arc path {
+	stroke: #fff;
+}
+
+div.tooltip {
+  position: relative;	
+  text-align: center;	
+  width: 60px;	
+  height: 28px;		
+  padding: 2px;	
+  font: 12px sans-serif;	
+  background: lightsteelblue;	
+  border: 0px;					
+  border-radius: 8px;
+ /*  pointer-events: none;	This line needs to be removed */
+ 
+ path { 
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+}
+ 
+	
+}
+</style>
+<body onload="headerChange(1)">
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#">Economic Forecasting Project</a>
+			</div>
+			<ul class="nav navbar-nav">
+				<li class="dropdown"><a class="dropdown-toggle"
+					data-toggle="dropdown" href="#" style="font-size: 12px;">Hotel
+						Data<span class="caret"></span>
+				</a>
+					<ul class="dropdown-menu">
+						<li><a href="javascript:headerChange(1)">Bar Charts</a></li>
+						<li><a
+							href="javascript:changeHotelPieChart(1,'Hampton Roads')">Hampton
+								Roads Market Shares</a></li>
+						<li><a
+							href="javascript:changeHotelPieChart(2,'Commonwealth of Virginia')">Commonwealth
+								of Virginia Market Shares</a></li>
+						<li><a
+							href="javascript:changeHotelPieChart(3,'Washington DC')">Washington
+								DC Market Shares</a></li>
+						<li><a
+							href="javascript:changeHotelPieChart(4,'Washington DC Room Share')">Washington
+								DC Room Share</a></li>
+					</ul></li>
+				<li style="font-size: 12px;"><a
+					href="javascript:headerChange(2)">Port Data</a></li>
+				<li style="font-size: 12px;"><a
+					href="javascript:headerChange(3)">CEAP</a></li>
+			</ul>
+		</div>
+	</nav>
+
+	<div id="hotelCharts">
+		<div id="hotelChartHeader" class="row">
+			<div class="col-sm-4">
+				<select class="form-control" id="hotelRegionPicker"
+					onchange="hotelRegionChange()">
+					<option value="US">United States</option>
+					<option value="VA">State of Virginia</option>
+					<option value="HR">Market Norfolk-Virginia Beach, VA</option>
+					<option value="MB">Market Myrtle Beach, SC</option>
+					<option value="OC">Tract Chesapeake/Ocean City</option>
+					<option value="VAB">Tract Virginia Beach</option>
+					<option value="NOP">Tract Norfolk/ Portsmouth</option>
+					<option value="WB">Williamsburg</option>
+					<option value="CSM">Tract Chesapeake/ Suffolk</option>
+					<option value="NHM">Tract Newport News/Hampton</option>
+					<option value="NO">City of Norfolk, VA</option>
+					<option value="CH">City of Chesapeake, VA</option>
+					<option value="SU">City of Suffolk, VA</option>
+					<option value="HA">City of Hampton, VA</option>
+					<option value="NN">City of Newport News, VA</option>
+					<option value="CC">Tract Coastal Carolina, NC</option>
+					<option value="CCGK">Gates, Pasquotank, Camden, and
+						Currituck NC Counties"</option>
+					<option value="BWM">Tract Blacksburg/Wytheville, VA</option>
+					<option value="CVM">Tract Charlottesville, VA</option>
+					<option value="HR">Hampton Roads</option>
+					<option value="VAB">Virginia Beach</option>
+					<option value="NOP">Norfolk/Portsmouth</option>
+					<option value="BK">Tract Bristol/Kingsport, TN</option>
+					<option value="LB">Tract Lynchburg,VA"</option>
+					<option value="RIP">Market Richmond/Petersburg, VA</option>
+					<option value="ROM">Tract Roanoke, VA</option>
+					<option value="SHM">Tract Staunton/Harrisonburg, VA</option>
+					<option value="DC">Market Washington, DC-MD-VA</option>
+					<option value="POBK">Virginia portion of
+						Bristol/Kingsport, TN</option>
+					<option value="VAPDC">Virginia Portion of Market
+						Washington, DC-MD-VA</option>
+					<option value="DCCBD">Washington DC CBD (District of
+						Columbia)</option>
+					<option value="MD">Maryland Portion of Washington,
+						DC-MD-VA</option>
+				</select>
+			</div>
+			<div class="col-sm-8">
+				<div class="container">
+					<label class="radio-inline"><input type="radio"
+						value="Revpar" name="optradio" checked="checked"
+						onchange="hotelRegionChange()" style="margin-top: 0px;">REVPAR</label>
+					<label class="radio-inline"><input type="radio"
+						value="Revenue" name="optradio" onchange="hotelRegionChange()"
+						style="margin-top: 0px;">Hotel Revenue</label> <label
+						class="radio-inline"><input type="radio" value="ADR"
+						name="optradio" onchange="hotelRegionChange()"
+						style="margin-top: 0px;">ADR</label> <label class="radio-inline"><input
+						type="radio" value="ORate" name="optradio"
+						onchange="hotelRegionChange()" style="margin-top: 0px;">Occupancy
+						Rate</label> <label class="radio-inline"><input type="radio"
+						value="AO" name="optradio" onchange="hotelRegionChange()"
+						style="margin-top: 0px;">Available vs Occupied</label>
+				</div>
+			</div>
+		</div>
+		<div id="hotelRevCharts" class="row"
+			style="margin-left: 0px; margin-right: 0px;"></div>
+		<div id="hotelPieChartHeader" class="row"
+			style="margin-left: 0px; margin-right: 0px;">
+
+			<table class="table table-responsive"
+				style="border: 0px; width: 50%;">
+				<tr>
+					<td colspan="3"><p style="font-size: 14px;" id="hotelPieChartTitle"></p></td>
+				</tr>
+				<tr class="form-inline">
+					<td><h5 id="titlePiePort" style="font-weight: bold;">Region
+							:</h5></td>
+					<td>
+						<p class="form-control" id="pieHeading"></p> <!-- 						<select id="hotelPieRegion" class="form-control" -->
+						<!-- 							onchange="changeHotelPieChart()"> --> <!-- 								<option value="1" selected="selected">Hampton Roads</option> -->
+						<!-- 								<option value="2">Commonwealth of Virginia</option> -->
+						<!-- 								<option value="3">Washington DC</option> --> <!-- 								<option value="4">Washington DC Room Share</option> -->
+						<!-- 						</select> -->
+					</td>
+					<td align="left"><select class="form-control"
+						id="hotelPieYear" onload="loadPieYearDropdownOptions()"
+						onchange="changeHotelPieChart(0,'')">
+					</select> <b id="hotelCompareYear" class="form-control"><script>$("#hotelCompareYear").text(new Date().getFullYear()-1);</script></b></td>
+				</tr>
+			</table>
+
+
+		</div>
+		<div id="hotelPieCharts" class="row"
+			style="margin-left: 0px; margin-right: 0px; width: 60%;">
+			<div class="col-sm-4" id="chartHotelPieFirst"></div>
+			<div class="col-sm-4" id="chartHotelPieSecond"></div>
+			<div class="col-sm-2" id="chartHotelPieLegend"></div>
+		</div>
+	</div>
+	<div id="portCharts">
+
+		<div class="row" id="portDataHeader" style="display: none;">
+			<div class="col-sm-6">
+				<div class="row">
+					<div class="col-sm-5">
+						<h5 id="primaryTitle">Port of Virginia</h5>
+					</div>
+					<div class="col-sm-7">
+						<div class="dropdown">
+							<button class="btn dropdown-toggle" type="button"
+								data-toggle="dropdown">
+								Select Type of Graph <span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:portofVAChart(1)">Outbound</a></li>
+								<li><a href="javascript:portofVAChart(2)">Inbound</a></li>
+								<li><a href="javascript:portofVAChart(3)">Total Loaded</a></li>
+								<li><a href="javascript:portofVAChart(4)">Empty TEU</a></li>
+								<li><a href="javascript:portofVAChart(5)">Total TEU</a></li>
+								<li><a href="javascript:portofVAChart(6)">Total
+										Container</a></li>
+								<li><a href="javascript:portofVAChart(7)">Container
+										Cargo</a></li>
+								<li><a href="javascript:portofVAChart(8)">Break Bulk
+										Tonnage</a></li>
+								<li><a href="javascript:portofVAChart(9)">Total General
+										Cargo</a></li>
+								<li><a href="javascript:portofVAChart(10)">Total Ship
+										Calls</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-sm-6">
+				<table class="table table-responsive" style="border: 0px;">
+					<tr>
+						<td><h5 id="titlePiePort">Market Shares of Total Loaded
+								TEUs</h5></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td colspan="2" align="center"><select id="teusYear"
+							onchange="changePieChart()">
+								<option>2006</option>
+								<option>2007</option>
+								<option>2008</option>
+								<option>2009</option>
+								<option>2010</option>
+								<option>2011</option>
+								<option>2012</option>
+								<option>2013</option>
+								<option>2014</option>
+						</select> <b>& 2015</b></td>
+					</tr>
+				</table>
+
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-sm-6" id="chartHolder"></div>
+			<div class="col-sm-6">
+				<table class="table">
+					<tr>
+						<td><div id="chartTEUSFirst"></div></td>
+						<td><div id="chartTEUSSecond"></div></td>
+					</tr>
+					<tr>
+						<td colspan="2"><div id="chartTEUSLegend"></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+	</div>
+
+	<div id="ceapDashboard">
+		<div class="row">
+			<div class="col-sm-4">
+				<select id="ceapDropdown" onchange="ceapRegionChange()" class="form-control">
+					<option value="Virginia">Commonwealth of Virginia</option>
+					<option value="VirginiaBeach">Virginia Beach-Norfolk-Newport News</option>
+					<option value="Blacksburg">Blacksburg-Christiansburg-Radford</option>
+					<option value="Charlottesville">Charlottesville</option>
+					<option value="Harrisonburg">Harrisonburg</option>
+					<option value="Lynchburg">Lynchburg</option>
+					<option value="Richmond">Richmond</option>
+					<option value="Roanoke">Roanoke</option>
+					<option value="Staunton">Staunton-Waynesboro</option>
+					<option value="Winchester">Winchester</option>
+					<option value="Washington">Washington-Arlington-Alexandria</option>
+				</select>
+			</div>
+			<div class="col-sm-8"></div>
+		</div>
+		<div class="row" style="cursor: pointer;">
+			<div class="col-sm-4">
+				<div class="row"
+					style="padding: 10px; background: gray; color: white; font-weight: bold; margin: 2px;">
+					<div id="ceapMenu1" class="col-sm-4" onclick="ceapCaller(1)">Real GDP</div>
+					<div id="ceapMenu2" class="col-sm-4" onclick="ceapCaller(2)">Unemployment Rate</div>
+					<div id="ceapMenu3" class="col-sm-4" onclick="ceapCaller(3)">Total Nonfarm Employment</div>
+				</div>
+				<div class="row"
+					style="padding: 10px; background: gray; color: white; font-weight: bold; margin: 2px;">
+					<div id="ceapMenu4" class="col-sm-4" onclick="ceapCaller(4)">Size of the Labor Force</div>
+					<div id="ceapMenu5" class="col-sm-4" onclick="ceapCaller(5)">Average Weekly Wages</div>
+					<div id="ceapMenu6" class="col-sm-4" onclick="ceapCaller(6)">Initial Unemployment Claims</div>
+				</div>
+				<div class="row"
+					style="padding: 10px; background: gray; color: white; font-weight: bold; margin: 2px;">
+					<div id="ceapMenu7" class="col-sm-4" onclick="ceapCaller(7)">Taxable Retail Sales</div>
+					<div id="ceapMenu8" class="col-sm-4" onclick="ceapCaller(8)">FHFA Housing Price Index</div>
+					<div id="ceapMenu9" class="col-sm-4" onclick="ceapCaller(9)">Hotel Revenue per Available Room (REVPAR)</div>
+				</div>
+			</div>
+			<div class="col-sm-8">
+				<div class="row">
+					<div id="ceapChart"></div>
+				</div>
+				<div class="row">
+					<div id="ceapChart2"></div>
+				</div>
+				<div class="row">
+					<div id="ceapChart3"></div>
+				</div>
+				<div class="row">
+					<div id="ceapChart4"></div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+</body>
+</html>
